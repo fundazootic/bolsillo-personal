@@ -5,3 +5,9 @@ dist/
 .vercel/
 *.log
 .npm-cache/
+ACCESOS-PRIVADOS.txt
+.test-credentials.json
+upgrade.mjs
+generate-access.mjs
+test-backend.mjs
+deploy-preview.mjs

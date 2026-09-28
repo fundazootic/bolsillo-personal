@@ -1,20 +1,35 @@
 # Bolsillo
 
-Una aplicación personal en español para registrar ingresos, organizar pagos mensuales, marcar lo pagado y saber cuánto dinero queda libre. Valores en pesos colombianos (COP).
+**[Abrir la aplicación](https://fundazootic.github.io/bolsillo-personal/)**
 
-## Uso
+Presupuesto personal sencillo en pesos colombianos para un máximo de tres cuentas independientes. El sitio es público; cada persona solo puede ver y modificar sus propios registros.
 
-Entra con el enlace que recibes en tu correo. Registra el sueldo en **Agregar ingreso**, tus obligaciones en **Agregar pago** y el dinero que quieres reservar en **Apartar dinero**. Usa el check cuando hayas pagado. Los cambios se guardan en tu cuenta y se consultan al cambiar de dispositivo o actualizar la página.
+## Empezar
+
+1. Abre la aplicación y selecciona **Tengo un código: crear cuenta**.
+2. Usa uno de los tres códigos privados entregados al propietario y elige usuario y contraseña (mínimo 12 caracteres).
+3. Conserva el código en un lugar seguro: también permite recuperar la contraseña. No publiques el código de tu propia cuenta.
+4. Registra tu sueldo en **Agregar ingreso**, las obligaciones en **Agregar pago** y tus reservas en **Apartar dinero**.
+5. Marca el check cuando hayas pagado. Los cambios se guardan en tu cuenta y se consultan desde otro dispositivo.
+
+**No se necesita tarjeta, suscripción, cuenta de Vercel ni proveedor de correo.**
+
+## Tu presupuesto
 
 - **Saldo actual** = ingresos − pagos realizados.
 - **Libre para ti** = ingresos − pagos realizados − pagos pendientes − apartados.
-- Los apartados son reservas del presupuesto; no representan una transferencia bancaria.
-- Marca un registro como habitual para copiarlo al mes siguiente. Cada copia empieza pendiente. Repetir la copia no duplica los registros.
+- Los apartados son reservas del presupuesto, no transferencias bancarias.
+- El resumen por categorías incluye pagos realizados y pendientes.
+- Marca un registro como habitual para copiarlo al mes siguiente. Las copias empiezan pendientes y repetir la copia no duplica los registros.
 - Los meses son independientes: ningún saldo se traslada automáticamente. Puedes registrar un saldo inicial como ingreso.
-- Descarga un CSV del mes para conservar un respaldo legible en Excel.
-- La demostración contiene datos ficticios en memoria y no escribe en tu cuenta.
+- Descarga un CSV mensual para conservar un respaldo que puedes abrir en Excel.
+- La demostración usa datos ficticios en memoria y no escribe en tu cuenta.
 
-## Desarrollo
+## Alojamiento gratuito
+
+GitHub Pages publica `docs/index.html` desde `main`, carpeta `/docs`. Supabase usa su plan Free para base de datos, contraseñas y una función de cuentas. No hay servicios de pago ni cobros configurados por la aplicación. Los planes gratuitos tienen límites y pueden suspender proyectos por inactividad; si ocurre, el propietario debe reactivarlo desde Supabase. No se promete disponibilidad ilimitada.
+
+## Desarrollo y publicación
 
 Requiere Node.js 20.19+ o 22.12+.
 
@@ -23,18 +38,26 @@ npm ci
 npm run dev
 npm test
 npm run build
+node build-pages.mjs
 ```
 
-Vite genera `dist/`. Importa este repositorio en Vercel como proyecto Vite, con `npm run build` y directorio de salida `dist`.
+Después de editar, sube el código y `docs/index.html` a `main`. GitHub Pages publica esa carpeta; no se requiere contratar un servicio de compilación. `build-pages.mjs` genera un HTML con JavaScript, CSS e icono incorporados.
 
-## Datos y autenticación
+## Privacidad y acceso
 
-Supabase almacena los registros en PostgreSQL con Row Level Security. Cada fila pertenece al usuario autenticado; no hay acceso anónimo. `config.js` contiene únicamente la URL y la clave **publicable**. Nunca debe contener una clave secreta o `service_role`.
+- Supabase Auth protege las contraseñas y emite las sesiones. Los identificadores `usuario@bolsillo.invalid` son internos; no son correos reales ni se envían mensajes.
+- PostgreSQL aplica Row Level Security: se requieren una sesión, la propiedad del registro y una membresía autorizada.
+- Los códigos se comprueban exclusivamente en el servidor. Solo se almacenan sus hashes SHA-256 en un esquema privado inaccesible desde el navegador.
+- La función `bolsillo-account` exige un código privado válido para crear o recuperar una cuenta. Su clave de administración vive únicamente en Supabase.
+- `config.js` contiene una clave **publicable**, diseñada para el navegador. No contiene claves secretas.
+- Los archivos `ACCESOS-PRIVADOS.txt` y `.test-credentials.json` se excluyen del repositorio. Nunca deben subirse a GitHub.
+- Una recuperación cierra las sesiones renovables anteriores; los tokens ya emitidos pueden seguir vigentes hasta su vencimiento.
+- La aplicación requiere internet para guardar. Un fallo de guardado se muestra como error. Las ediciones usan versiones para detectar cambios simultáneos desde otro dispositivo.
 
-Para una instalación independiente, ejecuta `schema.sql` en un proyecto nuevo de Supabase y configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. En Authentication → URL Configuration configura el dominio publicado como Site URL y URL de redirección. El servicio de correo incluido de Supabase puede limitar destinatarios a integrantes de la organización; para otros correos, configura SMTP propio.
+## Instalación independiente
 
-La sesión de acceso se mantiene en el navegador. Los registros financieros se consultan en el servidor. La aplicación requiere conexión para guardar y no presenta un cambio fallido como guardado. Las ediciones usan una versión del registro para detectar cambios simultáneos desde otro dispositivo.
+En un proyecto nuevo de Supabase, ejecuta `schema.sql` y después `access-schema.sql`; despliega `account-function.ts` como `bolsillo-account`. Esta función usa autenticación por código privado y no validación JWT del gateway. Cambia los orígenes CORS permitidos al dominio de tu instalación. Genera los códigos fuera del repositorio y almacena únicamente sus hashes en `private.bolsillo_access`. Configura la URL y clave publicable en `config.js` o mediante las variables de `.env.example`.
 
 ## Verificación
 
-`npm test` comprueba cálculos, montos inválidos, saldos negativos y copia mensual con fechas de fin de mes. `npm run build` verifica la compilación.
+Los tests de cálculo cubren montos inválidos, saldos negativos, checks sin doble descuento y copia mensual con fechas de fin de mes. También se verificó el servidor con dos cuentas temporales: registro por invitación, acceso con contraseña, persistencia, aislamiento entre usuarios, bloqueo de escrituras ajenas, conflictos de edición, acceso anónimo denegado y recuperación por código. Las cuentas y datos temporales fueron eliminados después de probarlos.
