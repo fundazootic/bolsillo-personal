@@ -25,6 +25,12 @@ Presupuesto personal sencillo en pesos colombianos para un máximo de tres cuent
 - Descarga un CSV mensual para conservar un respaldo que puedes abrir en Excel.
 - La demostración usa datos ficticios en memoria y no escribe en tu cuenta.
 
+## Deudas y abonos
+
+En **Agregar deuda**, registra el total adeudado y, opcionalmente, el abono mensual previsto. Cada deuda conserva su saldo al cambiar de mes. **Registrar abono** guarda el valor, la fecha y una nota; el historial permite corregirlos. Verás cuánto has abonado, cuánto falta y una estimación del plazo con pagos constantes, sin intereses ni cargos nuevos.
+
+Solo los abonos realizados descuentan dinero del mes de su fecha. El saldo de la deuda y el plan mensual no se reservan automáticamente. Los campos de dinero muestran separadores de miles: `1300000` se convierte en `1.300.000`.
+
 ## Alojamiento gratuito
 
 GitHub Pages publica `docs/index.html` desde `main`, carpeta `/docs`. Supabase usa su plan Free para base de datos, contraseñas y una función de cuentas. No hay servicios de pago ni cobros configurados por la aplicación. Los planes gratuitos tienen límites y pueden suspender proyectos por inactividad; si ocurre, el propietario debe reactivarlo desde Supabase. No se promete disponibilidad ilimitada.
@@ -56,8 +62,9 @@ Después de editar, sube el código y `docs/index.html` a `main`. GitHub Pages p
 
 ## Instalación independiente
 
-En un proyecto nuevo de Supabase, ejecuta `schema.sql` y después `access-schema.sql`; despliega `account-function.ts` como `bolsillo-account`. Esta función usa autenticación por código privado y no validación JWT del gateway. Cambia los orígenes CORS permitidos al dominio de tu instalación. Genera los códigos fuera del repositorio y almacena únicamente sus hashes en `private.bolsillo_access`. Configura la URL y clave publicable en `config.js` o mediante las variables de `.env.example`.
+En un proyecto nuevo de Supabase, ejecuta `schema.sql`, `access-schema.sql` y después `debts-schema.sql`; despliega `account-function.ts` como `bolsillo-account`. Esta función usa autenticación por código privado y no validación JWT del gateway. Cambia los orígenes CORS permitidos al dominio de tu instalación. Genera los códigos fuera del repositorio y almacena únicamente sus hashes en `private.bolsillo_access`. Configura la URL y clave publicable en `config.js` o mediante las variables de `.env.example`.
 
 ## Verificación
 
 Los tests de cálculo cubren montos inválidos, saldos negativos, checks sin doble descuento y copia mensual con fechas de fin de mes. También se verificó el servidor con dos cuentas temporales: registro por invitación, acceso con contraseña, persistencia, aislamiento entre usuarios, bloqueo de escrituras ajenas, conflictos de edición, acceso anónimo denegado y recuperación por código. Las cuentas y datos temporales fueron eliminados después de probarlos.
+
