@@ -20,7 +20,8 @@ Presupuesto personal sencillo en pesos colombianos para un máximo de tres cuent
 - **Libre para ti** = ingresos − pagos realizados − pagos pendientes − apartados.
 - Los apartados son reservas del presupuesto, no transferencias bancarias.
 - El resumen por categorías incluye pagos realizados y pendientes.
-- Marca un registro como habitual para copiarlo al mes siguiente. Las copias empiezan pendientes y repetir la copia no duplica los registros.
+- Marca **Pago fijo mensual** al agregar o editar un pago. Aparece automáticamente, pendiente, al abrir cualquier mes posterior. Conserva el día de vencimiento (o el último día si el mes es más corto) y no se duplica al actualizar. Desmarca la casilla o elimina el registro para detener futuras copias. Editar el valor cambia las próximas copias; los meses ya creados se conservan.
+- Los ingresos y apartados habituales se copian con **Copiar ingresos y apartados**.
 - Los meses son independientes: ningún saldo se traslada automáticamente. Puedes registrar un saldo inicial como ingreso.
 - Descarga un CSV mensual para conservar un respaldo que puedes abrir en Excel.
 - La demostración usa datos ficticios en memoria y no escribe en tu cuenta.
@@ -62,7 +63,7 @@ Después de editar, sube el código y `docs/index.html` a `main`. GitHub Pages p
 
 ## Instalación independiente
 
-En un proyecto nuevo de Supabase, ejecuta `schema.sql`, `access-schema.sql` y después `debts-schema.sql`; despliega `account-function.ts` como `bolsillo-account`. Esta función usa autenticación por código privado y no validación JWT del gateway. Cambia los orígenes CORS permitidos al dominio de tu instalación. Genera los códigos fuera del repositorio y almacena únicamente sus hashes en `private.bolsillo_access`. Configura la URL y clave publicable en `config.js` o mediante las variables de `.env.example`.
+En un proyecto nuevo de Supabase, ejecuta `schema.sql`, `access-schema.sql` `debts-schema.sql` y `recurring-schema.sql`; despliega `account-function.ts` como `bolsillo-account`. Esta función usa autenticación por código privado y no validación JWT del gateway. Cambia los orígenes CORS permitidos al dominio de tu instalación. Genera los códigos fuera del repositorio y almacena únicamente sus hashes en `private.bolsillo_access`. Configura la URL y clave publicable en `config.js` o mediante las variables de `.env.example`.
 
 ## Verificación
 
