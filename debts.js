@@ -17,8 +17,8 @@ export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
  function failed(){unavailable=true;}
  function demoRows(){return demoPayments.filter(p=>p.month===getMonth());}
  function section(){
-  if(unavailable)return '<section class="panel debt-panel"><div class="panel-heading"><h2>Deudas y abonos</h2><p>No pudimos consultar tus deudas. Actualiza para reintentar.</p></div></section>';
-  return accountSections(debts,payments,charges);
+  if(unavailable)return '<section class="panel debt-panel"><div class="panel-heading"><h2>Tarjetas y deudas</h2><p>No pudimos consultar tus tarjetas y deudas. Actualiza para reintentar.</p></div></section>';
+  return accountSections(debts,payments,charges,getMonth());
  }
  function bind(){
   document.querySelector('#new-debt')?.addEventListener('click',()=>editDebt());
@@ -41,7 +41,7 @@ export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
  }
  function editDebt(d,card=d?.account_type==='card'){
   const id=d?.id||crypto.randomUUID();
-  modal(d?(card?'Editar tarjeta':'Editar deuda'):(card?'Agregar tarjeta':'Agregar deuda'),`<label for="debt-title">${card?'Nombre de la tarjeta':'¿A quién le debes o qué debes?'}</label><input id="debt-title" name="title" required maxlength="120" value="${esc(d?.title||'')}" placeholder="Ej. Préstamo de Juan"><label for="debt-amount">${card?'Saldo inicial de la tarjeta en pesos':'Total de la deuda en pesos'}</label><input id="debt-amount" data-money name="amount" inputmode="numeric" required value="${d?.amount===0?'0':number(d?.amount)}" placeholder="Ej. 1.300.000"><label for="debt-plan">Abono mensual de referencia <small>(opcional)</small></label><input id="debt-plan" data-money name="plan" inputmode="numeric" value="${number(d?.monthly_payment)}" placeholder="Ej. 100.000"><p class="helper">Es opcional y solo estima el plazo. Cada abono puede ser mayor o menor; no registra pagos ni aparta dinero.</p><label for="debt-notes">Nota <small>(opcional)</small></label><textarea id="debt-notes" name="notes" maxlength="1000">${esc(d?.notes||'')}</textarea>`,async data=>{
+  modal(d?(card?'Editar tarjeta':'Editar deuda'):(card?'Agregar tarjeta':'Agregar deuda'),`<label for="debt-title">${card?'Nombre de la tarjeta':'¿A quién le debes o qué debes?'}</label><input id="debt-title" name="title" required maxlength="120" value="${esc(d?.title||'')}" placeholder="${card?'Ej. Visa o Amex':'Ej. Préstamo de Juan'}"><label for="debt-amount">${card?'Saldo inicial de la tarjeta en pesos':'Total de la deuda en pesos'}</label><input id="debt-amount" data-money name="amount" inputmode="numeric" required value="${d?.amount===0?'0':number(d?.amount)}" placeholder="Ej. 1.300.000"><label for="debt-plan">Abono mensual de referencia <small>(opcional)</small></label><input id="debt-plan" data-money name="plan" inputmode="numeric" value="${number(d?.monthly_payment)}" placeholder="Ej. 100.000"><p class="helper">Es opcional y solo estima el plazo. Cada abono puede ser mayor o menor; no registra pagos ni aparta dinero.</p><label for="debt-notes">Nota <small>(opcional)</small></label><textarea id="debt-notes" name="notes" maxlength="1000">${esc(d?.notes||'')}</textarea>`,async data=>{
    const values={id,title:String(data.get('title')).trim(),account_type:card?'card':'debt',amount:card&&String(data.get('amount')).trim()==='0'?0:parseAmount(data.get('amount')),monthly_payment:data.get('plan')?parseAmount(data.get('plan')):null,notes:String(data.get('notes')).trim()};
    if(!values.title)throw Error('Escribe el nombre de la deuda.');
    if(d&&values.amount+charges.filter(c=>c.debt_id===d.id).reduce((a,c)=>a+c.amount,0)<debtStats(d,payments,charges).paid)throw Error('El total no puede ser menor que lo abonado.');
@@ -57,7 +57,7 @@ export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
    if(amount>remaining)throw Error('El abono supera el saldo pendiente.');
    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today()||date<'2000-01-01')throw Error('Revisa la fecha del abono.');
    const values={amount,month:date.slice(0,7),payment_date:date,notes};
-   if(isDemo()){if(p)Object.assign(p,values,{version:p.version+1});else demoPayments.push({...values,id:requestId,debt_id:d.id,kind:'expense',category:'Deudas',title:d.title,paid:true,recurring:false,version:1});return;}
+   if(isDemo()){if(p)Object.assign(p,values,{version:p.version+1});else demoPayments.push({...values,id:requestId,debt_id:d.id,kind:'expense',category:'Deudas',title:d.title,paid:true,recurring:false,version:1,created_at:new Date().toISOString()});return;}
    const result=p?await db.from('entries').update({...values,version:p.version+1}).eq('id',p.id).eq('version',p.version).select('id'):await db.rpc('add_debt_payment',{p_id:requestId,p_debt:d.id,p_amount:amount,p_date:date,p_notes:notes});
    if(result.error)throw Error(result.error.message);if(p&&!result.data.length)throw Error('El abono cambió en otro dispositivo. Cierra y actualiza antes de editar.');
   });
@@ -70,7 +70,7 @@ export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today()||date<'2000-01-01')throw Error('Revisa la fecha.');
    if(c&&debtStats(d,payments,charges).remaining+amount-c.amount<0)throw Error('La corrección dejaría los abonos por encima de la deuda.');
    const values={amount,charge_date:date,description,charge_type};
-   if(isDemo()){if(c)Object.assign(c,values,{version:c.version+1});else demoCharges.push({...values,id:requestId,debt_id:d.id,version:1});return;}
+   if(isDemo()){if(c)Object.assign(c,values,{version:c.version+1});else demoCharges.push({...values,id:requestId,debt_id:d.id,version:1,created_at:new Date().toISOString()});return;}
    const result=c?await db.from('card_charges').update({...values,version:c.version+1}).eq('id',c.id).eq('version',c.version).select('id'):await db.rpc('add_card_charge',{p_id:requestId,p_debt:d.id,p_amount:amount,p_date:date,p_description:description,p_type:charge_type});
    if(result.error)throw Error(result.error.message);if(c&&!result.data.length)throw Error('La compra cambió en otro dispositivo. Cierra y actualiza antes de editar.');
   });

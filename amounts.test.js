@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {formatPesos,debtStats} from './amounts.js';
+import {formatPesos,debtStats,cardMonthStats} from './amounts.js';
 import {parseAmount,totals} from './core.js';
 test('COP input groups thousands and accepts pasted mixed grouping',()=>{
  for(const text of ['1300000','1.300.000','1.300,000','1,300,000']){
@@ -29,4 +29,10 @@ test('card purchases increase debt, variable payments reduce it and only repayme
  assert.equal(debtStats(d,payments,charges).remaining,80000);
  assert.equal(debtStats(d,payments,charges).months,2);
  assert.equal(debtStats({id:'new',amount:0},[],[]).remaining,0);
+});
+test('card month totals separate cards, dates and repayments',()=>{
+ const payments=[{debt_id:'visa',amount:75000,payment_date:'2026-09-30'},{debt_id:'visa',amount:200000,payment_date:'2026-10-01'}];
+ const charges=[{debt_id:'visa',amount:150000,charge_date:'2026-09-30'},{debt_id:'amex',amount:300000,charge_date:'2026-09-30'}];
+ assert.deepEqual(cardMonthStats('visa',payments,charges,'2026-09'),{spent:150000,paid:75000});
+ assert.deepEqual(cardMonthStats('visa',payments,charges,'2026-10'),{spent:0,paid:200000});
 });

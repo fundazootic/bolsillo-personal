@@ -24,3 +24,9 @@ export function debtStats(debt,payments,charges=[]){
  const months=remaining===0?0:debt.monthly_payment?Math.ceil(remaining/debt.monthly_payment):null;
  return {paid,remaining,months};
 }
+export function cardMonthStats(id,payments,charges,month){
+ return {
+  spent:charges.filter(c=>c.debt_id===id&&c.charge_date?.slice(0,7)===month).reduce((sum,c)=>sum+c.amount,0),
+  paid:payments.filter(p=>p.debt_id===id&&!p.is_debt_balance&&p.payment_date?.slice(0,7)===month).reduce((sum,p)=>sum+p.amount,0)
+ };
+}
