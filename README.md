@@ -17,7 +17,7 @@ Presupuesto personal sencillo en pesos colombianos para un máximo de tres cuent
 ## Tu presupuesto
 
 - **Saldo actual** = ingresos − pagos realizados.
-- **Libre para ti** = ingresos − pagos realizados − pagos pendientes − apartados.
+- **Libre para ti** = ingresos − pagos realizados − apartados. Marcar un pago descuenta su valor; desmarcarlo devuelve ese valor al saldo. Los pendientes se muestran por separado y todavía no se descuentan.
 - Los apartados son reservas del presupuesto, no transferencias bancarias.
 - El resumen por categorías incluye pagos realizados y pendientes.
 - Marca **Pago fijo mensual** al agregar o editar un pago. Aparece automáticamente, pendiente, al abrir cualquier mes posterior. Conserva el día de vencimiento (o el último día si el mes es más corto) y no se duplica al actualizar. Desmarca la casilla o elimina el registro para detener futuras copias. Editar el valor cambia las próximas copias; los meses ya creados se conservan.
