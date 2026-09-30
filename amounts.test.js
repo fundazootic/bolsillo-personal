@@ -17,3 +17,16 @@ test('payments persist across months and reduce principal only once',()=>{
  assert.deepEqual(debtStats({...debt,monthly_payment:null},payments),{paid:300000,remaining:1000000,months:null});
  assert.equal(debtStats({...debt,amount:300000},payments).months,0);
 });
+test('card purchases increase debt, variable payments reduce it and only repayments reduce cash',()=>{
+ const d={id:'visa',amount:100000,monthly_payment:50000};
+ const charges=[{debt_id:'visa',amount:200000},{debt_id:'amex',amount:900000}];
+ const payments=[{debt_id:'visa',amount:25000,kind:'expense',paid:true},{debt_id:'visa',amount:75000,kind:'expense',paid:true}];
+ assert.equal(debtStats(d,payments,charges).remaining,200000);
+ assert.equal(totals([{kind:'income',amount:1000000},...payments]).free,900000);
+ payments.push({debt_id:'visa',amount:200000,kind:'expense',paid:true});
+ assert.equal(debtStats(d,payments,charges).remaining,0);
+ charges.push({debt_id:'visa',amount:80000});
+ assert.equal(debtStats(d,payments,charges).remaining,80000);
+ assert.equal(debtStats(d,payments,charges).months,2);
+ assert.equal(debtStats({id:'new',amount:0},[],[]).remaining,0);
+});

@@ -17,9 +17,10 @@ export function bindAmounts(root){
   });
  });
 }
-export function debtStats(debt,payments){
+export function debtStats(debt,payments,charges=[]){
  const paid=payments.filter(p=>p.debt_id===debt.id&&!p.is_debt_balance).reduce((sum,p)=>sum+p.amount,0);
- const remaining=Math.max(0,debt.amount-paid);
+ const charged=charges.filter(c=>c.debt_id===debt.id).reduce((sum,c)=>sum+c.amount,0);
+ const remaining=Math.max(0,debt.amount+charged-paid);
  const months=remaining===0?0:debt.monthly_payment?Math.ceil(remaining/debt.monthly_payment):null;
  return {paid,remaining,months};
 }
