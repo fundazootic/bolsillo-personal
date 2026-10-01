@@ -36,3 +36,9 @@ test('card month totals separate cards, dates and repayments',()=>{
  assert.deepEqual(cardMonthStats('visa',payments,charges,'2026-09'),{spent:150000,paid:75000});
  assert.deepEqual(cardMonthStats('visa',payments,charges,'2026-10'),{spent:0,paid:200000});
 });
+
+test('card totals respect the 25th cutoff',()=>{
+ const charges=['2026-09-24','2026-09-25','2026-10-24','2026-10-25'].map(charge_date=>({debt_id:'visa',amount:100,charge_date}));
+ const payments=[{debt_id:'visa',amount:50,payment_date:'2026-09-25'}];
+ assert.deepEqual(cardMonthStats('visa',payments,charges,'2026-10',25),{spent:200,paid:50});
+});

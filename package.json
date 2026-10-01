@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build --base=./",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test core.test.js amounts.test.js recurring.test.js"
+    "test": "node --test core.test.js amounts.test.js recurring.test.js periods.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",

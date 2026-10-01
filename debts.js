@@ -1,10 +1,11 @@
+import {periodFor,inPeriod} from './periods.js';
 import {accountSections} from './card-view.js';
 import {money,parseAmount,monthNow,monthLabel,shiftMonth} from './core.js';
 import {bindAmounts,debtStats} from './amounts.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const number=v=>v?new Intl.NumberFormat('es-CO').format(v):'';
-export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
+export function createDebts({db,isDemo,getMonth,getStartDay=()=>1,getUser,refresh,toast,setBusy}){
  let debts=[],payments=[],charges=[],demoDebts=[],demoPayments=[],demoCharges=[],unavailable=false;
  function reset(){debts=[];payments=[];charges=[];demoDebts=[];demoPayments=[];demoCharges=[];}
  async function fetchData(){
@@ -15,10 +16,10 @@ export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
  }
  function accept(data){debts=data.debts;payments=data.payments;charges=data.charges;unavailable=false;}
  function failed(){unavailable=true;}
- function demoRows(){return demoPayments.filter(p=>p.month===getMonth());}
+ function demoRows(){return demoPayments.filter(p=>periodFor(p.payment_date,getStartDay())===getMonth()).map(p=>({...p,month:periodFor(p.payment_date,getStartDay()),budget_date:p.payment_date}));}
  function section(){
   if(unavailable)return '<section class="panel debt-panel"><div class="panel-heading"><h2>Tarjetas y deudas</h2><p>No pudimos consultar tus tarjetas y deudas. Actualiza para reintentar.</p></div></section>';
-  return accountSections(debts,payments,charges,getMonth());
+  return accountSections(debts,payments,charges,getMonth(),getStartDay());
  }
  function bind(){
   document.querySelector('#new-debt')?.addEventListener('click',()=>editDebt());
@@ -56,7 +57,7 @@ export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
    const amount=parseAmount(data.get('amount')),date=String(data.get('date')),notes=String(data.get('notes')).trim();
    if(amount>remaining)throw Error('El abono supera el saldo pendiente.');
    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today()||date<'2000-01-01')throw Error('Revisa la fecha del abono.');
-   const values={amount,month:date.slice(0,7),payment_date:date,notes};
+   const values={amount,month:periodFor(date,getStartDay()),payment_date:date,notes};
    if(isDemo()){if(p)Object.assign(p,values,{version:p.version+1});else demoPayments.push({...values,id:requestId,debt_id:d.id,kind:'expense',category:'Deudas',title:d.title,paid:true,recurring:false,version:1,created_at:new Date().toISOString()});return;}
    const result=p?await db.from('entries').update({...values,version:p.version+1}).eq('id',p.id).eq('version',p.version).select('id'):await db.rpc('add_debt_payment',{p_id:requestId,p_debt:d.id,p_amount:amount,p_date:date,p_notes:notes});
    if(result.error)throw Error(result.error.message);if(p&&!result.data.length)throw Error('El abono cambió en otro dispositivo. Cierra y actualiza antes de editar.');
@@ -75,6 +76,7 @@ export function createDebts({db,isDemo,getMonth,getUser,refresh,toast,setBusy}){
    if(result.error)throw Error(result.error.message);if(c&&!result.data.length)throw Error('La compra cambió en otro dispositivo. Cierra y actualiza antes de editar.');
   });
  }
- return {fetchData,accept,failed,reset,demoRows,section,bind,editPaymentById:id=>{const p=payments.find(p=>p.id===id);if(p)editPayment(debts.find(d=>d.id===p.debt_id),p);}};
+ function periodStats(){const ids=new Set(debts.filter(d=>d.account_type==='card').map(d=>d.id));return {spent:charges.filter(c=>ids.has(c.debt_id)&&inPeriod(c.charge_date,getMonth(),getStartDay())).reduce((a,c)=>a+c.amount,0),paid:payments.filter(p=>ids.has(p.debt_id)&&inPeriod(p.payment_date,getMonth(),getStartDay())).reduce((a,p)=>a+p.amount,0)};}
+ return {periodStats,fetchData,accept,failed,reset,demoRows,section,bind,editPaymentById:id=>{const p=payments.find(p=>p.id===id);if(p)editPayment(debts.find(d=>d.id===p.debt_id),p);}};
 }
 

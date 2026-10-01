@@ -67,9 +67,17 @@ Después de editar, sube el código y `docs/index.html` a `main`. GitHub Pages p
 
 ## Instalación independiente
 
-En un proyecto nuevo de Supabase, ejecuta `schema.sql`, `access-schema.sql` `debts-schema.sql`, `recurring-schema.sql` y `cards-schema.sql`; despliega `account-function.ts` como `bolsillo-account`. Esta función usa autenticación por código privado y no validación JWT del gateway. Cambia los orígenes CORS permitidos al dominio de tu instalación. Genera los códigos fuera del repositorio y almacena únicamente sus hashes en `private.bolsillo_access`. Configura la URL y clave publicable en `config.js` o mediante las variables de `.env.example`.
+En un proyecto nuevo de Supabase, ejecuta `schema.sql`, `access-schema.sql` `debts-schema.sql`, `recurring-schema.sql` `cards-schema.sql` y `periods-schema.sql`; despliega `account-function.ts` como `bolsillo-account`. Esta función usa autenticación por código privado y no validación JWT del gateway. Cambia los orígenes CORS permitidos al dominio de tu instalación. Genera los códigos fuera del repositorio y almacena únicamente sus hashes en `private.bolsillo_access`. Configura la URL y clave publicable en `config.js` o mediante las variables de `.env.example`.
 
 ## Verificación
 
 Los tests de cálculo cubren montos inválidos, saldos negativos, checks sin doble descuento y copia mensual con fechas de fin de mes. También se verificó el servidor con dos cuentas temporales: registro por invitación, acceso con contraseña, persistencia, aislamiento entre usuarios, bloqueo de escrituras ajenas, conflictos de edición, acceso anónimo denegado y recuperación por código. Las cuentas y datos temporales fueron eliminados después de probarlos.
 
+
+## Corte y flujo de dinero
+
+Configura el inicio en **Configurar mi corte**. Con inicio el 25, octubre comprende del 25 de septiembre al 24 de octubre. Cada cuenta guarda su propio corte. Los días 29–31 se ajustan al último día de meses cortos. La fecha del registro determina el período; abonos y compras usan su fecha real.
+
+Cambiar el corte reclasifica registros con fecha y pagos pendientes con vencimiento conocido. Los antiguos sin fecha conservan su mes y muestran un aviso para revisarlos. Si dos copias de un pago fijo quedarían en el mismo período, se solicita revisar sus fechas.
+
+**Así va tu dinero** muestra ingresos, pagos realizados, flujo neto, saldo después de pendientes y apartados, vencidos, comparación con el período anterior y compras frente a abonos. La referencia diaria usa solo lo registrado: no predice gastos futuros ni incluye intereses no registrados.
